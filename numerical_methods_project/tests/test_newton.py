@@ -1,7 +1,7 @@
 # numerical_solver/tests/test_newton.py
 import unittest
 import math
-from numerical_methods_project.src import newton
+from solvers import newton
 from numerical_methods_project.src import utils
 
 class TestNewton(unittest.TestCase):

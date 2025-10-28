@@ -1,7 +1,7 @@
 # numerical_solver/tests/test_bisection.py
 import unittest
 import math
-from numerical_methods_project.src import bisection
+from solvers import bisection
 from numerical_methods_project.src import utils
 
 class TestBisection(unittest.TestCase):

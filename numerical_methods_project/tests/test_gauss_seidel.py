@@ -1,7 +1,7 @@
 # numerical_solver/tests/test_gauss_seidel.py
 import unittest
 import numpy as np
-from numerical_methods_project.src import gauss_seidel
+from solvers import gauss_seidel
 from numerical_methods_project.src import utils
 
 class TestGaussSeidel(unittest.TestCase):
