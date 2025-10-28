@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "./numerical_methods_project/src"
+    ]
+}
