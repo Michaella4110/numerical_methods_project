@@ -11,22 +11,21 @@ import concurrent.futures
 
 # Ensure src directory is in path for imports
 script_dir = os.path.dirname(__file__)
-sys.path.append(os.path.join(script_dir, 'solvers'))
-sys.path.append(os.path.join(script_dir, 'utils'))
+parent_dir = os.path.dirname(script_dir)
+sys.path.append(parent_dir)
 
-# Import specific functions instead of using utils.*
-from solvers.bisection import bisection
-from solvers.newton import newton_method
-from solvers.gauss_seidel import gauss_seidel
+# Import from the same directory
+from solvers.bisection import solve as bisection_solve
+from solvers.newton import solve as newton_solve
+from solvers.gauss_seidel import solve as gauss_seidel_solve
 
-# Import specific functions from utils
+# Import from utils in the same directory
 from utils import (
     parse_function, 
     get_derivative, 
     validate_bisection, 
     is_diagonally_dominant
 )
-
 
 class NumericalMethodsGUI:
     def __init__(self, master):
@@ -219,8 +218,9 @@ class NumericalMethodsGUI:
                 if "Diverging" in status or "Derivative near zero" in status:
                     messagebox.showwarning("Solver Warning", f"Bisection Method: {status}")
 
+            # FIXED: Use the imported alias bisection_solve instead of bisection.solve
             self._run_solver_async(
-                bisection.solve, 
+                bisection_solve,  # CHANGED: Use the imported alias
                 (func, a, b, tol, max_iter),
                 on_bisection_done, 
                 lambda iter, sample, err: self._progress_callback(iter, sample, err, "Bisection")
@@ -267,8 +267,9 @@ class NumericalMethodsGUI:
                 if "Diverging" in status or "Derivative near zero" in status:
                     messagebox.showwarning("Solver Warning", f"Newton-Raphson Method: {status}")
 
+            # FIXED: Use the imported alias newton_solve instead of newton_method.solve
             self._run_solver_async(
-                newton_method.solve, 
+                newton_solve,  # CHANGED: Use the imported alias
                 (func, func_prime, x0, tol, max_iter),
                 on_newton_done, 
                 lambda iter, sample, err: self._progress_callback(iter, sample, err, "Newton-Raphson")
@@ -424,24 +425,34 @@ class NumericalMethodsGUI:
     def _parse_gauss_seidel_equations(self, equations_str_list):
         """
         Parses a list of equation strings into matrix A and vector b.
+        Ensures consistent variable ordering using logical order.
         """
         
-        # Determine all unique variables across all equations to ensure consistent order
+        # Determine all unique variables across all equations
         all_variables = set()
         for eq_str in equations_str_list:
             if '=' not in eq_str:
                 raise ValueError(f"Equation '{eq_str}' is missing an '=' sign.")
             lhs = eq_str.split('=')[0]
-            # Improved regex to capture variable names more accurately
             all_variables.update(re.findall(r'\b[a-zA-Z_][a-zA-Z0-9_]*\b', lhs))
         
-        variables_found = sorted(list(all_variables))
+        # IMPORTANT: Use logical variable ordering instead of alphabetical
+        preferred_order = ['x', 'y', 'z', 'w', 'u', 'v', 'a', 'b', 'c', 'd']
+        
+        # Sort variables: preferred ones first, then alphabetical for others
+        variables_found = sorted(
+            list(all_variables), 
+            key=lambda var: (preferred_order.index(var) if var in preferred_order else len(preferred_order), var)
+        )
+        
         n = len(variables_found)
         
         if n == 0:
             raise ValueError("Could not determine variables from equations.")
 
         var_to_idx = {var: i for i, var in enumerate(variables_found)}
+        
+        print(f"DEBUG: Variables detected in order: {variables_found}")  # For debugging
 
         A = np.zeros((n, n))
         b = np.zeros(n)
@@ -459,18 +470,18 @@ class NumericalMethodsGUI:
             # Parse LHS for coefficients
             terms = re.findall(r'([+\-]?)?\s*(\d*\.?\d*)?\s*([a-zA-Z_][a-zA-Z0-9_]*)', lhs.strip())
             
-            # Reset row A[i, :] before processing terms, in case of multiple equations processed by mistake
+            # Reset row A[i, :] before processing terms
             A[i, :] = 0.0 
 
             for sign_str, coeff_str, var_name in terms:
                 if not var_name: 
                     continue 
 
-                coeff_val = 1.0 # Default for 'x' or 'y'
-                if coeff_str: # if a number is explicitly given
+                coeff_val = 1.0  # Default for 'x' or 'y'
+                if coeff_str:  # if a number is explicitly given
                     try:
                         coeff_val = float(coeff_str)
-                    except ValueError: # Case where coeff_str is empty but var_name exists (e.g., 'x')
+                    except ValueError:  # Case where coeff_str is empty but var_name exists
                         coeff_val = 1.0
                 
                 # Apply sign
@@ -480,9 +491,12 @@ class NumericalMethodsGUI:
                 if var_name not in var_to_idx:
                     raise ValueError(f"Variable '{var_name}' in equation {i+1} is not consistent with other equations.")
                 
-                # Add to the matrix. If a variable appears multiple times, coefficients are summed.
+                # Add to the matrix
                 A[i, var_to_idx[var_name]] += coeff_val
-            
+        
+        print(f"DEBUG: Matrix A:\n{A}")  # For debugging
+        print(f"DEBUG: Vector b: {b}")   # For debugging
+        
         return A, b, variables_found
 
     def _solve_gs(self):
@@ -551,9 +565,9 @@ class NumericalMethodsGUI:
             self.gs_output_text.delete(1.0, tk.END)
             self.gs_output_text.insert(tk.END, "Gauss-Seidel solver started...\n")
             
-            # Run Gauss-Seidel solver in background thread
+            # FIXED: Use the imported alias gauss_seidel_solve instead of gauss_seidel.solve
             self._run_gs_solver_async(
-                gauss_seidel.solve,
+                gauss_seidel_solve,  # CHANGED: Use the imported alias
                 (A, b, x0, tol, max_iter),
                 on_gs_done,
                 on_gs_progress

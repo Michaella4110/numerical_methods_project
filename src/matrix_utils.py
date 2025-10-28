@@ -1,5 +1,6 @@
 import numpy as np
-from scipy.linalg import lu_factor, lu_solve # For robust direct solve
+from scipy.linalg import lu_factor, lu_solve  # For robust direct solve
+from typing import Tuple
 
 def is_diagonally_dominant(A: np.ndarray) -> bool:
     """
@@ -25,11 +26,11 @@ def is_diagonally_dominant(A: np.ndarray) -> bool:
         row_sum_of_off_diagonals = np.sum(abs(A[i, :])) - diagonal_element
         
         if diagonal_element <= row_sum_of_off_diagonals:
-            return False # Not strictly diagonally dominant
+            return False  # Not strictly diagonally dominant
             
-    return True # All rows satisfy the condition
+    return True  # All rows satisfy the condition
 
-def try_make_diagonally_dominant(A: np.ndarray, b: np.ndarray) -> (np.ndarray, np.ndarray, bool):
+def try_make_diagonally_dominant(A: np.ndarray, b: np.ndarray) -> Tuple[np.ndarray, np.ndarray, bool]:
     """
     Attempts to reorder the rows of matrix A and vector b to achieve strict
     diagonal dominance. This uses a greedy pivoting heuristic.
@@ -105,7 +106,7 @@ def try_make_diagonally_dominant(A: np.ndarray, b: np.ndarray) -> (np.ndarray, n
                 if remaining_unplaced_rows:
                     new_row_order[i] = remaining_unplaced_rows.pop(0)
                 else:
-                    break # All rows are placed
+                    break  # All rows are placed
 
     # Construct the reordered matrix and vector
     reordered_A = original_A[new_row_order, :]
@@ -123,7 +124,7 @@ def try_make_diagonally_dominant(A: np.ndarray, b: np.ndarray) -> (np.ndarray, n
     return reordered_A, reordered_b, is_dominant
 
 
-def safe_direct_solve(A: np.ndarray, b: np.ndarray) -> (np.ndarray, str):
+def safe_direct_solve(A: np.ndarray, b: np.ndarray) -> Tuple[np.ndarray | None, str | None]:
     """
     Attempts to solve a system of linear equations Ax = b using a direct method (LU decomposition).
     Handles singular matrices gracefully.

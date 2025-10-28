@@ -5,9 +5,9 @@ import sys
 # Ensure src directory is in path for imports
 sys.path.append(os.path.dirname(__file__))
 
-import bisection
-import newton
-import gauss_seidel
+import solvers.bisection as bisection
+import solvers.newton as newton
+import solvers.gauss_seidel as gauss_seidel
 import utils
 import numpy as np
 
