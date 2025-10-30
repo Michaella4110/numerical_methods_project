@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 from tkinter import messagebox, scrolledtext
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
@@ -27,10 +28,26 @@ from utils import (
     is_diagonally_dominant
 )
 
+# Import the Theme Manager
+from theme import theme
+
 class NumericalMethodsGUI:
     def __init__(self, master):
         self.master = master
         master.title("Numerical Methods Solver")
+        
+        # Set fixed window size
+        master.geometry("700x1100")
+        master.minsize(700, 1100)  # Prevent resizing below minimum
+        
+        # Apply main theme to the root window
+        theme.apply_main_theme(master)
+
+        # Configure modern ttk styles
+        self.configure_modern_styles()
+        
+        # Set global font - FIXED: Use proper tkinter font syntax
+        master.option_add("*Font", ("Segoe UI", 10))
 
         self.function_str = tk.StringVar(master)
         self.a_val = tk.StringVar(master)
@@ -48,73 +65,227 @@ class NumericalMethodsGUI:
         self.gs_fig = None
         self.gs_ax = None
         self.gs_canvas = None
+        self.gs_scrollable_frame = None
 
         self.create_widgets()
 
-    def create_widgets(self):
-        # --- Input Frame (Nonlinear Equations) ---
-        input_frame = tk.LabelFrame(self.master, text="Inputs (Nonlinear Equations)", padx=10, pady=10)
-        input_frame.pack(padx=10, pady=5, fill="x")
+    def configure_modern_styles(self):
+        """Configure modern ttk styles for the application"""
+        style = ttk.Style()
+        
+        # Use a modern theme
+        style.theme_use("clam")
+        
+        # Configure modern button style
+        style.configure(
+            "Modern.TButton",
+            padding=(10, 5),
+            relief="flat",
+            background="#4CAF50",
+            foreground="white",
+            focuscolor="none"
+        )
+        
+        # Method-specific button styles
+        style.configure(
+            "Bisection.TButton",
+            padding=(10, 5),
+            relief="flat", 
+            background="#2196F3",
+            foreground="white",
+            focuscolor="none"
+        )
+        
+        style.configure(
+            "Newton.TButton",
+            padding=(10, 5),
+            relief="flat",
+            background="#FF9800", 
+            foreground="white",
+            focuscolor="none"
+        )
+        
+        style.configure(
+            "GaussSeidel.TButton",
+            padding=(10, 5),
+            relief="flat",
+            background="#9C27B0",
+            foreground="white",
+            focuscolor="none"
+        )
+        
+        style.configure(
+            "Warning.TButton",
+            padding=(10, 5),
+            relief="flat",
+            background="#FFC107",
+            foreground="black",
+            focuscolor="none"
+        )
+        
+        style.configure(
+            "Danger.TButton",
+            padding=(10, 5),
+            relief="flat",
+            background="#F44336",
+            foreground="white",
+            focuscolor="none"
+        )
+        
+        # Configure label styles for better appearance
+        style.configure("Title.TLabel", font=("Segoe UI", 16, "bold"))
+        style.configure("Subtitle.TLabel", font=("Segoe UI", 14, "bold"))
+        style.configure("Bold.TLabel", font=("Segoe UI", 10, "bold"))
 
-        tk.Label(input_frame, text="Function f(x):").grid(row=0, column=0, sticky="w", pady=2)
-        tk.Entry(input_frame, textvariable=self.function_str, width=40).grid(row=0, column=1, sticky="ew", pady=2, padx=5)
+    def create_widgets(self):
+        # Create main frame with scrollbar
+        main_frame = tk.Frame(self.master)
+        main_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Create canvas and scrollbar
+        self.canvas_main = tk.Canvas(main_frame)
+        scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=self.canvas_main.yview)
+        self.scrollable_frame = ttk.Frame(self.canvas_main)
+        
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: self.canvas_main.configure(scrollregion=self.canvas_main.bbox("all"))
+        )
+        
+        self.canvas_main.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        self.canvas_main.configure(yscrollcommand=scrollbar.set)
+        
+        # Pack canvas and scrollbar
+        self.canvas_main.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        # Bind mousewheel to scroll
+        self.canvas_main.bind("<MouseWheel>", self._on_mousewheel)
+        self.scrollable_frame.bind("<MouseWheel>", self._on_mousewheel)
+
+        # Add header title - FIXED: Use tk.Label for custom fonts
+        title = tk.Label(self.scrollable_frame, text="Numerical Solver", font=("Segoe UI", 16, "bold"))
+        theme.style_label(title, 'main')
+        title.pack(pady=12)
+
+        # --- Input Frame (Nonlinear Equations) ---
+        input_frame = ttk.LabelFrame(self.scrollable_frame, text="Inputs (Nonlinear Equations)", padding=12)
+        input_frame.pack(padx=8, pady=6, fill="x")
+
+        # Function input
+        func_label = ttk.Label(input_frame, text="Function f(x):")
+        func_label.grid(row=0, column=0, sticky="w", pady=5)
+        
+        func_entry = ttk.Entry(input_frame, textvariable=self.function_str, width=30)
+        func_entry.grid(row=0, column=1, sticky="ew", pady=5, padx=4)
         self.function_str.set("x**3 - x - 1") # Default for example
 
-        tk.Label(input_frame, text="Interval 'a' (Bisection):").grid(row=1, column=0, sticky="w", pady=2)
-        tk.Entry(input_frame, textvariable=self.a_val, width=20).grid(row=1, column=1, sticky="w", pady=2, padx=5)
+        # Interval a
+        a_label = ttk.Label(input_frame, text="Interval 'a' (Bisection):")
+        a_label.grid(row=1, column=0, sticky="w", pady=5)
+        
+        a_entry = ttk.Entry(input_frame, textvariable=self.a_val, width=30)
+        a_entry.grid(row=1, column=1, sticky="ew", pady=5, padx=4)
         self.a_val.set("1.0") # Default for example
 
-        tk.Label(input_frame, text="Interval 'b' (Bisection):").grid(row=2, column=0, sticky="w", pady=2)
-        tk.Entry(input_frame, textvariable=self.b_val, width=20).grid(row=2, column=1, sticky="w", pady=2, padx=5)
+        # Interval b
+        b_label = ttk.Label(input_frame, text="Interval 'b' (Bisection):")
+        b_label.grid(row=2, column=0, sticky="w", pady=5)
+        
+        b_entry = ttk.Entry(input_frame, textvariable=self.b_val, width=30)
+        b_entry.grid(row=2, column=1, sticky="ew", pady=5, padx=4)
         self.b_val.set("2.0") # Default for example
 
-        tk.Label(input_frame, text="Initial Guess x0 (Newton):").grid(row=3, column=0, sticky="w", pady=2)
-        tk.Entry(input_frame, textvariable=self.x0_val, width=20).grid(row=3, column=1, sticky="w", pady=2, padx=5)
+        # Initial guess
+        x0_label = ttk.Label(input_frame, text="Initial Guess x0 (Newton):")
+        x0_label.grid(row=3, column=0, sticky="w", pady=5)
+        
+        x0_entry = ttk.Entry(input_frame, textvariable=self.x0_val, width=30)
+        x0_entry.grid(row=3, column=1, sticky="ew", pady=5, padx=4)
         self.x0_val.set("1.0") # Default for example
 
-        tk.Label(input_frame, text="Tolerance:").grid(row=4, column=0, sticky="w", pady=2)
-        tk.Entry(input_frame, textvariable=self.tolerance, width=20).grid(row=4, column=1, sticky="w", pady=2, padx=5)
+        # Tolerance
+        tol_label = ttk.Label(input_frame, text="Tolerance:")
+        tol_label.grid(row=4, column=0, sticky="w", pady=5)
         
-        tk.Label(input_frame, text="Max Iterations:").grid(row=5, column=0, sticky="w", pady=2)
-        tk.Entry(input_frame, textvariable=self.max_iter_nonlinear, width=20).grid(row=5, column=1, sticky="w", pady=2, padx=5)
+        tol_entry = ttk.Entry(input_frame, textvariable=self.tolerance, width=30)
+        tol_entry.grid(row=4, column=1, sticky="ew", pady=5, padx=4)
+        
+        # Max iterations
+        iter_label = ttk.Label(input_frame, text="Max Iterations:")
+        iter_label.grid(row=5, column=0, sticky="w", pady=5)
+        
+        iter_entry = ttk.Entry(input_frame, textvariable=self.max_iter_nonlinear, width=30)
+        iter_entry.grid(row=5, column=1, sticky="ew", pady=5, padx=4)
 
         input_frame.grid_columnconfigure(1, weight=1) # Allow entry fields to expand
 
         # --- Buttons Frame ---
-        button_frame = tk.Frame(self.master, padx=10, pady=5)
-        button_frame.pack(padx=10, pady=5, fill="x")
+        button_frame = ttk.Frame(self.scrollable_frame, padding=8)
+        button_frame.pack(padx=8, pady=6, fill="x")
 
-        tk.Button(button_frame, text="Run Bisection", command=self.run_bisection).pack(side="left", padx=5, expand=True)
-        tk.Button(button_frame, text="Run Newton-Raphson", command=self.run_newton_raphson).pack(side="left", padx=5, expand=True)
+        # Method buttons with modern styles
+        bisection_btn = ttk.Button(button_frame, text="Run Bisection", command=self.run_bisection, style="Bisection.TButton")
+        bisection_btn.pack(side="left", padx=4, pady=4, expand=True)
+
+        newton_btn = ttk.Button(button_frame, text="Run Newton-Raphson", command=self.run_newton_raphson, style="Newton.TButton")
+        newton_btn.pack(side="left", padx=4, pady=4, expand=True)
         
-        # Add Gauss-Seidel Button
-        tk.Button(button_frame, text="Gauss-Seidel Method", command=self.open_gauss_window).pack(side="left", padx=5, expand=True)
-        tk.Button(button_frame, text="Clear Results", command=self.clear_results).pack(side="right", padx=5, expand=True)
+        # Gauss-Seidel Button
+        gs_btn = ttk.Button(button_frame, text="Gauss-Seidel Method", command=self.open_gauss_window, style="GaussSeidel.TButton")
+        gs_btn.pack(side="left", padx=4, pady=4, expand=True)
         
-        # Add Stop Button
-        tk.Button(button_frame, text="Stop Solver", command=self.stop_solver).pack(side="right", padx=5, expand=True)
+        # Action buttons
+        clear_btn = ttk.Button(button_frame, text="Clear Results", command=self.clear_results, style="Warning.TButton")
+        clear_btn.pack(side="right", padx=4, pady=4, expand=True)
+        
+        stop_btn = ttk.Button(button_frame, text="Stop Solver", command=self.stop_solver, style="Danger.TButton")
+        stop_btn.pack(side="right", padx=4, pady=4, expand=True)
 
         # --- Results Frame ---
-        results_frame = tk.LabelFrame(self.master, text="Results", padx=10, pady=10)
-        results_frame.pack(padx=10, pady=5, fill="both", expand=True)
+        results_frame = ttk.LabelFrame(self.scrollable_frame, text="Results", padding=12)
+        results_frame.pack(padx=8, pady=6, fill="both", expand=True)
 
         self.result_text = scrolledtext.ScrolledText(results_frame, height=10, wrap=tk.WORD)
+        theme.style_text(self.result_text, 'results')
         self.result_text.pack(fill="both", expand=True)
 
         # --- Plot Frame ---
-        plot_frame = tk.LabelFrame(self.master, text="Convergence Plot", padx=10, pady=10)
-        plot_frame.pack(padx=10, pady=5, fill="both", expand=True)
+        plot_frame = ttk.LabelFrame(self.scrollable_frame, text="Convergence Plot", padding=12)
+        plot_frame.pack(padx=8, pady=6, fill="both", expand=True)
 
-        self.fig, self.ax = plt.subplots(figsize=(6, 4))
-        self.canvas = FigureCanvasTkAgg(self.fig, master=plot_frame)
-        self.canvas_widget = self.canvas.get_tk_widget()
-        self.canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        self.fig, self.ax = plt.subplots(figsize=(4, 3))
+        # Set plot background to match theme
+        self.fig.patch.set_facecolor(theme.colors['dark_lighter'])
+        self.ax.set_facecolor(theme.colors['dark_lighter'])
+        self.ax.tick_params(colors=theme.colors['text_light'])
+        self.ax.xaxis.label.set_color(theme.colors['text_light'])
+        self.ax.yaxis.label.set_color(theme.colors['text_light'])
+        self.ax.title.set_color(theme.colors['text_light'])
+        
+        self.plot_canvas = FigureCanvasTkAgg(self.fig, master=plot_frame)
+        self.plot_canvas_widget = self.plot_canvas.get_tk_widget()
+        self.plot_canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        self.toolbar = NavigationToolbar2Tk(self.canvas, plot_frame)
+        self.toolbar = NavigationToolbar2Tk(self.plot_canvas, plot_frame)
+        # Style the toolbar to match theme
+        self.toolbar.config(background=theme.colors['dark_light'])
+        for child in self.toolbar.winfo_children():
+            if isinstance(child, tk.Button):
+                child.configure(
+                    bg=theme.colors['primary'],
+                    fg=theme.colors['text_light'],
+                    relief='raised',
+                    bd=1
+                )
         self.toolbar.update()
-        self.canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        self.plot_canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         
         self.clear_results() # Initialize plot
+
+    def _on_mousewheel(self, event):
+        """Handle mousewheel scrolling"""
+        self.canvas_main.yview_scroll(int(-1*(event.delta/120)), "units")
 
     def stop_solver(self):
         if self.current_solver_future and self.current_solver_future.running():
@@ -125,11 +296,12 @@ class NumericalMethodsGUI:
     def clear_results(self):
         self.result_text.delete(1.0, tk.END)
         self.ax.clear()
-        self.ax.set_title("Convergence Plot")
-        self.ax.set_xlabel("Iteration")
-        self.ax.set_ylabel("Error (log scale)")
-        self.ax.grid(True, which="both", ls="--")
-        self.canvas.draw()
+        self.ax.set_title("Convergence Plot", color=theme.colors['text_light'])
+        self.ax.set_xlabel("Iteration", color=theme.colors['text_light'])
+        self.ax.set_ylabel("Error (log scale)", color=theme.colors['text_light'])
+        self.ax.grid(True, which="both", ls="--", alpha=0.3)
+        self.ax.tick_params(colors=theme.colors['text_light'])
+        self.plot_canvas.draw()
 
     # --- Progress Callback for Solvers ---
     def _progress_callback(self, iteration, sample_values, error, solver_name):
@@ -326,24 +498,42 @@ class NumericalMethodsGUI:
                 if positive_errors_indices:
                     filtered_iterations = [iterations[i] for i in positive_errors_indices]
                     filtered_errors = [errors[i] for i in positive_errors_indices]
-                    self.ax.plot(filtered_iterations, filtered_errors, marker='o', linestyle='-', color='blue')
+                    
+                    # Use method-specific colors
+                    if "Bisection" in title_prefix:
+                        color = theme.colors['bisection']
+                    elif "Newton" in title_prefix:
+                        color = theme.colors['newton']
+                    elif "Gauss" in title_prefix:
+                        color = theme.colors['gauss_seidel']
+                    else:
+                        color = theme.colors['primary']
+                    
+                    self.ax.plot(filtered_iterations, filtered_errors, marker='o', linestyle='-', color=color)
                     self.ax.set_yscale('log')
-                    self.ax.set_title(f"Convergence Plot ({title_prefix})")
-                    self.ax.set_xlabel("Iteration")
-                    self.ax.set_ylabel("Error (log scale)")
-                    self.ax.grid(True, which="both", ls="--")
+                    self.ax.set_title(f"Convergence Plot ({title_prefix})", color=theme.colors['text_light'])
+                    self.ax.set_xlabel("Iteration", color=theme.colors['text_light'])
+                    self.ax.set_ylabel("Error (log scale)", color=theme.colors['text_light'])
+                    self.ax.grid(True, which="both", ls="--", alpha=0.3)
+                    self.ax.tick_params(colors=theme.colors['text_light'])
                 else:
-                    self.ax.text(0.5, 0.5, "No positive error data to plot on log scale", horizontalalignment='center', verticalalignment='center', transform=self.ax.transAxes, fontsize=10)
-                    self.ax.set_title(f"Convergence Plot ({title_prefix})")
+                    self.ax.text(0.5, 0.5, "No positive error data to plot on log scale", 
+                                horizontalalignment='center', verticalalignment='center', 
+                                transform=self.ax.transAxes, fontsize=10, color=theme.colors['text_light'])
+                    self.ax.set_title(f"Convergence Plot ({title_prefix})", color=theme.colors['text_light'])
             else:
-                self.ax.text(0.5, 0.5, "No Error data to plot", horizontalalignment='center', verticalalignment='center', transform=self.ax.transAxes, fontsize=12)
-                self.ax.set_title(f"Convergence Plot ({title_prefix})")
+                self.ax.text(0.5, 0.5, "No Error data to plot", 
+                            horizontalalignment='center', verticalalignment='center', 
+                            transform=self.ax.transAxes, fontsize=12, color=theme.colors['text_light'])
+                self.ax.set_title(f"Convergence Plot ({title_prefix})", color=theme.colors['text_light'])
                 
         else:
-            self.ax.text(0.5, 0.5, "No history or error data to plot", horizontalalignment='center', verticalalignment='center', transform=self.ax.transAxes, fontsize=12)
-            self.ax.set_title(f"Convergence Plot ({title_prefix})")
+            self.ax.text(0.5, 0.5, "No history or error data to plot", 
+                        horizontalalignment='center', verticalalignment='center', 
+                        transform=self.ax.transAxes, fontsize=12, color=theme.colors['text_light'])
+            self.ax.set_title(f"Convergence Plot ({title_prefix})", color=theme.colors['text_light'])
 
-        self.canvas.draw()
+        self.plot_canvas.draw()
 
     # --- Gauss-Seidel Method Window ---
     def open_gauss_window(self):
@@ -353,63 +543,133 @@ class NumericalMethodsGUI:
 
         self.gs_window = tk.Toplevel(self.master)
         self.gs_window.title("Gauss-Seidel Method")
-        self.gs_window.geometry("600x650") # Set a default size
-        self.gs_window.protocol("WM_DELETE_WINDOW", self._on_gs_window_close) # Handle close event
+        # Set fixed window size for Gauss-Seidel window to 710x1100
+        self.gs_window.geometry("710x1100")
+        self.gs_window.minsize(710, 1100)  # Prevent resizing below minimum
+        self.gs_window.maxsize(710, 1100)  # Prevent resizing larger
+        
+        theme.apply_main_theme(self.gs_window)
+        
+        # Create main frame with scrollbar for Gauss-Seidel window - EXACTLY LIKE MAIN WINDOW
+        gs_main_frame = tk.Frame(self.gs_window)
+        gs_main_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Create canvas and scrollbar for Gauss-Seidel - EXACTLY LIKE MAIN WINDOW
+        gs_canvas = tk.Canvas(gs_main_frame)
+        gs_scrollbar = ttk.Scrollbar(gs_main_frame, orient="vertical", command=gs_canvas.yview)
+        self.gs_scrollable_frame = ttk.Frame(gs_canvas)
+        
+        self.gs_scrollable_frame.bind(
+            "<Configure>",
+            lambda e: gs_canvas.configure(scrollregion=gs_canvas.bbox("all"))
+        )
+        
+        gs_canvas.create_window((0, 0), window=self.gs_scrollable_frame, anchor="nw")
+        gs_canvas.configure(yscrollcommand=gs_scrollbar.set)
+        
+        # Pack canvas and scrollbar - EXACTLY LIKE MAIN WINDOW
+        gs_canvas.pack(side="left", fill="both", expand=True)
+        gs_scrollbar.pack(side="right", fill="y")
+        
+        # Bind mousewheel to scroll - EXACTLY LIKE MAIN WINDOW
+        gs_canvas.bind("<MouseWheel>", lambda e: gs_canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
+        self.gs_scrollable_frame.bind("<MouseWheel>", lambda e: gs_canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
+
+        # Configure modern styles for the Gauss-Seidel window
+        self.gs_window.option_add("*Font", ("Segoe UI", 10))
+        
+        # Add header to Gauss-Seidel window
+        gs_title = tk.Label(self.gs_scrollable_frame, text="Gauss-Seidel Solver", font=("Segoe UI", 14, "bold"))
+        theme.style_label(gs_title, 'main')
+        gs_title.pack(pady=10)
 
         # Input Frame for Gauss-Seidel
-        gs_input_frame = tk.LabelFrame(self.gs_window, text="System of Equations (Ax = b)", padx=10, pady=10)
-        gs_input_frame.pack(padx=10, pady=5, fill="x")
+        gs_input_frame = ttk.LabelFrame(self.gs_scrollable_frame, text="System of Equations (Ax = b)", padding=12)
+        gs_input_frame.pack(padx=8, pady=6, fill="x")
 
-        tk.Label(gs_input_frame, text="Enter equations (line by line, e.g., '3x + y = 5'):").pack(anchor="w")
-        self.eq_input = scrolledtext.ScrolledText(gs_input_frame, height=6, width=60)
-        self.eq_input.pack(fill="x", expand=True)
+        eq_label = ttk.Label(gs_input_frame, text="Enter equations (line by line, e.g., '3x + y = 5'):")
+        eq_label.pack(anchor="w", pady=5)
+        
+        self.eq_input = scrolledtext.ScrolledText(gs_input_frame, height=4, width=65)
+        theme.style_text(self.eq_input, 'results')
+        self.eq_input.pack(fill="x", expand=True, pady=5)
         # Default example equations
         self.eq_input.insert(tk.END, "10x + 2y - z = 27\n")
         self.eq_input.insert(tk.END, "-3x - 6y + 2z = -61.5\n")
         self.eq_input.insert(tk.END, "x + y + 5z = -21.5\n")
 
-        tk.Label(gs_input_frame, text="Initial Guess (comma separated, e.g., '0,0,0'):").pack(anchor="w")
-        self.initial_entry = tk.Entry(gs_input_frame)
-        self.initial_entry.pack(fill="x", expand=True)
+        init_label = ttk.Label(gs_input_frame, text="Initial Guess (comma separated, e.g., '0,0,0'):")
+        init_label.pack(anchor="w", pady=5)
+        
+        self.initial_entry = ttk.Entry(gs_input_frame)
+        self.initial_entry.pack(fill="x", expand=True, pady=5)
         self.initial_entry.insert(0, "0,0,0") # Default for example
 
-        tk.Label(gs_input_frame, text="Tolerance:").pack(anchor="w")
-        self.gs_tol_entry = tk.Entry(gs_input_frame)
+        tol_label = ttk.Label(gs_input_frame, text="Tolerance:")
+        tol_label.pack(anchor="w", pady=5)
+        
+        self.gs_tol_entry = ttk.Entry(gs_input_frame)
         self.gs_tol_entry.insert(0, "1e-6")
-        self.gs_tol_entry.pack(fill="x", expand=True)
+        self.gs_tol_entry.pack(fill="x", expand=True, pady=5)
 
-        tk.Label(gs_input_frame, text="Max Iterations:").pack(anchor="w")
-        self.iter_entry = tk.Entry(gs_input_frame)
+        iter_label = ttk.Label(gs_input_frame, text="Max Iterations:")
+        iter_label.pack(anchor="w", pady=5)
+        
+        self.iter_entry = ttk.Entry(gs_input_frame)
         self.iter_entry.insert(0, "50")
-        self.iter_entry.pack(fill="x", expand=True)
+        self.iter_entry.pack(fill="x", expand=True, pady=5)
 
-        tk.Button(self.gs_window, text="Solve Gauss-Seidel", command=self._solve_gs).pack(pady=10)
+        solve_btn = ttk.Button(self.gs_scrollable_frame, text="Solve Gauss-Seidel", command=self._solve_gs, style="GaussSeidel.TButton")
+        solve_btn.pack(pady=10)
 
         # Output Frame for Gauss-Seidel
-        gs_output_frame = tk.LabelFrame(self.gs_window, text="Gauss-Seidel Results", padx=10, pady=10)
-        gs_output_frame.pack(padx=10, pady=5, fill="both", expand=True)
-        self.gs_output_text = scrolledtext.ScrolledText(gs_output_frame, height=10, width=50, wrap=tk.WORD)
+        gs_output_frame = ttk.LabelFrame(self.gs_scrollable_frame, text="Gauss-Seidel Results", padding=12)
+        gs_output_frame.pack(padx=8, pady=6, fill="both", expand=True)
+        
+        self.gs_output_text = scrolledtext.ScrolledText(gs_output_frame, height=12, width=65, wrap=tk.WORD)
+        theme.style_text(self.gs_output_text, 'results')
         self.gs_output_text.pack(fill="both", expand=True)
 
-        # Plot Frame for Gauss-Seidel convergence
-        gs_plot_frame = tk.LabelFrame(self.gs_window, text="Convergence Plot", padx=10, pady=10)
-        gs_plot_frame.pack(padx=10, pady=5, fill="both", expand=True)
+        # Plot Frame for Gauss-Seidel convergence - EXACTLY LIKE MAIN WINDOW
+        gs_plot_frame = ttk.LabelFrame(self.gs_scrollable_frame, text="Convergence Plot", padding=12)
+        gs_plot_frame.pack(padx=8, pady=6, fill="both", expand=True)
 
-        self.gs_fig, self.gs_ax = plt.subplots(figsize=(5, 3))
+        self.gs_fig, self.gs_ax = plt.subplots(figsize=(6, 3.5))
+        # Style the Gauss-Seidel plot
+        self.gs_fig.patch.set_facecolor(theme.colors['dark_lighter'])
+        self.gs_ax.set_facecolor(theme.colors['dark_lighter'])
+        self.gs_ax.tick_params(colors=theme.colors['text_light'])
+        self.gs_ax.xaxis.label.set_color(theme.colors['text_light'])
+        self.gs_ax.yaxis.label.set_color(theme.colors['text_light'])
+        self.gs_ax.title.set_color(theme.colors['text_light'])
+        
         self.gs_canvas = FigureCanvasTkAgg(self.gs_fig, master=gs_plot_frame)
         self.gs_canvas_widget = self.gs_canvas.get_tk_widget()
         self.gs_canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
+        # Navigation toolbar - EXACTLY LIKE MAIN WINDOW
         self.gs_toolbar = NavigationToolbar2Tk(self.gs_canvas, gs_plot_frame)
+        # Style the toolbar to match theme - EXACTLY LIKE MAIN WINDOW
+        self.gs_toolbar.config(background=theme.colors['dark_light'])
+        for child in self.gs_toolbar.winfo_children():
+            if isinstance(child, tk.Button):
+                child.configure(
+                    bg=theme.colors['gauss_seidel'],
+                    fg=theme.colors['text_light'],
+                    relief='raised',
+                    bd=1
+                )
         self.gs_toolbar.update()
-        self.gs_canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         
-        self.gs_ax.set_title("Gauss-Seidel Convergence Plot")
-        self.gs_ax.set_xlabel("Iteration")
-        self.gs_ax.set_ylabel("Error (log scale)")
-        self.gs_ax.grid(True, which="both", ls="--")
+        self.gs_ax.set_title("Gauss-Seidel Convergence Plot", color=theme.colors['text_light'])
+        self.gs_ax.set_xlabel("Iteration", color=theme.colors['text_light'])
+        self.gs_ax.set_ylabel("Error (log scale)", color=theme.colors['text_light'])
+        self.gs_ax.grid(True, which="both", ls="--", alpha=0.3)
+        self.gs_ax.tick_params(colors=theme.colors['text_light'])
         self.gs_canvas.draw()
-    
+        
+        self.gs_window.protocol("WM_DELETE_WINDOW", self._on_gs_window_close)
+
     def _on_gs_window_close(self):
         # Clear references when the window is closed
         if self.gs_window:
@@ -421,6 +681,7 @@ class NumericalMethodsGUI:
             self.gs_fig = None
             self.gs_ax = None
             self.gs_canvas = None
+            self.gs_scrollable_frame = None
 
     def _parse_gauss_seidel_equations(self, equations_str_list):
         """
@@ -661,27 +922,28 @@ class NumericalMethodsGUI:
                 if positive_errors_indices:
                     filtered_iterations = [iterations[i] for i in positive_errors_indices]
                     filtered_errors = [errors[i] for i in positive_errors_indices]
-                    self.gs_ax.plot(filtered_iterations, filtered_errors, marker='o', linestyle='-', color='green')
+                    self.gs_ax.plot(filtered_iterations, filtered_errors, marker='o', linestyle='-', color=theme.colors['gauss_seidel'])
                     self.gs_ax.set_yscale('log')
-                    self.gs_ax.set_title(f"Convergence Plot ({title_prefix})")
-                    self.gs_ax.set_xlabel("Iteration")
-                    self.gs_ax.set_ylabel("Error (log scale)")
-                    self.gs_ax.grid(True, which="both", ls="--")
+                    self.gs_ax.set_title(f"Convergence Plot ({title_prefix})", color=theme.colors['text_light'])
+                    self.gs_ax.set_xlabel("Iteration", color=theme.colors['text_light'])
+                    self.gs_ax.set_ylabel("Error (log scale)", color=theme.colors['text_light'])
+                    self.gs_ax.grid(True, which="both", ls="--", alpha=0.3)
+                    self.gs_ax.tick_params(colors=theme.colors['text_light'])
                 else:
                     self.gs_ax.text(0.5, 0.5, "No positive error data to plot on log scale", 
                                    horizontalalignment='center', verticalalignment='center', 
-                                   transform=self.gs_ax.transAxes, fontsize=10)
-                    self.gs_ax.set_title(f"Convergence Plot ({title_prefix})")
+                                   transform=self.gs_ax.transAxes, fontsize=10, color=theme.colors['text_light'])
+                    self.gs_ax.set_title(f"Convergence Plot ({title_prefix})", color=theme.colors['text_light'])
             else:
                 self.gs_ax.text(0.5, 0.5, "No Error data to plot", 
                                horizontalalignment='center', verticalalignment='center', 
-                               transform=self.gs_ax.transAxes, fontsize=12)
-                self.gs_ax.set_title(f"Convergence Plot ({title_prefix})")
+                               transform=self.gs_ax.transAxes, fontsize=12, color=theme.colors['text_light'])
+                self.gs_ax.set_title(f"Convergence Plot ({title_prefix})", color=theme.colors['text_light'])
         else:
             self.gs_ax.text(0.5, 0.5, "No history or error data to plot", 
                            horizontalalignment='center', verticalalignment='center', 
-                           transform=self.gs_ax.transAxes, fontsize=12)
-            self.gs_ax.set_title(f"Convergence Plot ({title_prefix})")
+                           transform=self.gs_ax.transAxes, fontsize=12, color=theme.colors['text_light'])
+            self.gs_ax.set_title(f"Convergence Plot ({title_prefix})", color=theme.colors['text_light'])
 
         self.gs_canvas.draw()
 
