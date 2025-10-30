@@ -36,9 +36,8 @@ class NumericalMethodsGUI:
         self.master = master
         master.title("Numerical Methods Solver")
         
-        # Set fixed window size
-        master.geometry("700x1100")
-        master.minsize(700, 1100)  # Prevent resizing below minimum
+        # Remove fixed window size - let it be resizable
+        master.minsize(700, 800)  # Reasonable minimum size
         
         # Apply main theme to the root window
         theme.apply_main_theme(master)
@@ -66,6 +65,7 @@ class NumericalMethodsGUI:
         self.gs_ax = None
         self.gs_canvas = None
         self.gs_scrollable_frame = None
+        self.gs_toolbar = None
 
         self.create_widgets()
 
@@ -138,12 +138,12 @@ class NumericalMethodsGUI:
         style.configure("Bold.TLabel", font=("Segoe UI", 10, "bold"))
 
     def create_widgets(self):
-        # Create main frame with scrollbar
+        # Create main frame with scrollbar - NO SPACE BETWEEN CONTENT AND SCROLLBAR
         main_frame = tk.Frame(self.master)
-        main_frame.pack(fill=tk.BOTH, expand=True)
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=0, pady=0)
         
-        # Create canvas and scrollbar
-        self.canvas_main = tk.Canvas(main_frame)
+        # Create canvas and scrollbar - NO SPACE
+        self.canvas_main = tk.Canvas(main_frame, highlightthickness=0)
         scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=self.canvas_main.yview)
         self.scrollable_frame = ttk.Frame(self.canvas_main)
         
@@ -155,9 +155,9 @@ class NumericalMethodsGUI:
         self.canvas_main.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
         self.canvas_main.configure(yscrollcommand=scrollbar.set)
         
-        # Pack canvas and scrollbar
-        self.canvas_main.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+        # Pack canvas and scrollbar - NO SPACE
+        self.canvas_main.pack(side="left", fill="both", expand=True, padx=0, pady=0)
+        scrollbar.pack(side="right", fill="y", padx=0, pady=0)
         
         # Bind mousewheel to scroll
         self.canvas_main.bind("<MouseWheel>", self._on_mousewheel)
@@ -267,6 +267,7 @@ class NumericalMethodsGUI:
         self.plot_canvas_widget = self.plot_canvas.get_tk_widget()
         self.plot_canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
+        # Navigation toolbar with save button like main window
         self.toolbar = NavigationToolbar2Tk(self.plot_canvas, plot_frame)
         # Style the toolbar to match theme
         self.toolbar.config(background=theme.colors['dark_light'])
@@ -543,19 +544,17 @@ class NumericalMethodsGUI:
 
         self.gs_window = tk.Toplevel(self.master)
         self.gs_window.title("Gauss-Seidel Method")
-        # Set fixed window size for Gauss-Seidel window to 710x1100
-        self.gs_window.geometry("710x1100")
-        self.gs_window.minsize(710, 1100)  # Prevent resizing below minimum
-        self.gs_window.maxsize(710, 1100)  # Prevent resizing larger
+        # Remove fixed window size for Gauss-Seidel window - let it be resizable
+        self.gs_window.minsize(700, 800)  # Reasonable minimum size
         
         theme.apply_main_theme(self.gs_window)
         
         # Create main frame with scrollbar for Gauss-Seidel window - EXACTLY LIKE MAIN WINDOW
         gs_main_frame = tk.Frame(self.gs_window)
-        gs_main_frame.pack(fill=tk.BOTH, expand=True)
+        gs_main_frame.pack(fill=tk.BOTH, expand=True, padx=0, pady=0)
         
-        # Create canvas and scrollbar for Gauss-Seidel - EXACTLY LIKE MAIN WINDOW
-        gs_canvas = tk.Canvas(gs_main_frame)
+        # Create canvas and scrollbar for Gauss-Seidel - EXACTLY LIKE MAIN WINDOW, NO SPACE
+        gs_canvas = tk.Canvas(gs_main_frame, highlightthickness=0)
         gs_scrollbar = ttk.Scrollbar(gs_main_frame, orient="vertical", command=gs_canvas.yview)
         self.gs_scrollable_frame = ttk.Frame(gs_canvas)
         
@@ -567,9 +566,9 @@ class NumericalMethodsGUI:
         gs_canvas.create_window((0, 0), window=self.gs_scrollable_frame, anchor="nw")
         gs_canvas.configure(yscrollcommand=gs_scrollbar.set)
         
-        # Pack canvas and scrollbar - EXACTLY LIKE MAIN WINDOW
-        gs_canvas.pack(side="left", fill="both", expand=True)
-        gs_scrollbar.pack(side="right", fill="y")
+        # Pack canvas and scrollbar - EXACTLY LIKE MAIN WINDOW, NO SPACE
+        gs_canvas.pack(side="left", fill="both", expand=True, padx=0, pady=0)
+        gs_scrollbar.pack(side="right", fill="y", padx=0, pady=0)
         
         # Bind mousewheel to scroll - EXACTLY LIKE MAIN WINDOW
         gs_canvas.bind("<MouseWheel>", lambda e: gs_canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
@@ -619,8 +618,15 @@ class NumericalMethodsGUI:
         self.iter_entry.insert(0, "50")
         self.iter_entry.pack(fill="x", expand=True, pady=5)
 
-        solve_btn = ttk.Button(self.gs_scrollable_frame, text="Solve Gauss-Seidel", command=self._solve_gs, style="GaussSeidel.TButton")
-        solve_btn.pack(pady=10)
+        # Action buttons for Gauss-Seidel - EXACTLY LIKE MAIN WINDOW
+        gs_button_frame = ttk.Frame(self.gs_scrollable_frame, padding=8)
+        gs_button_frame.pack(padx=8, pady=6, fill="x")
+
+        solve_btn = ttk.Button(gs_button_frame, text="Solve Gauss-Seidel", command=self._solve_gs, style="GaussSeidel.TButton")
+        solve_btn.pack(side="left", padx=4, pady=4, expand=True)
+
+        clear_gs_btn = ttk.Button(gs_button_frame, text="Clear Results", command=self._clear_gs_results, style="Warning.TButton")
+        clear_gs_btn.pack(side="right", padx=4, pady=4, expand=True)
 
         # Output Frame for Gauss-Seidel
         gs_output_frame = ttk.LabelFrame(self.gs_scrollable_frame, text="Gauss-Seidel Results", padding=12)
@@ -647,7 +653,7 @@ class NumericalMethodsGUI:
         self.gs_canvas_widget = self.gs_canvas.get_tk_widget()
         self.gs_canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        # Navigation toolbar - EXACTLY LIKE MAIN WINDOW
+        # Navigation toolbar with save button like main window - EXACTLY LIKE MAIN WINDOW
         self.gs_toolbar = NavigationToolbar2Tk(self.gs_canvas, gs_plot_frame)
         # Style the toolbar to match theme - EXACTLY LIKE MAIN WINDOW
         self.gs_toolbar.config(background=theme.colors['dark_light'])
@@ -661,14 +667,27 @@ class NumericalMethodsGUI:
                 )
         self.gs_toolbar.update()
         
-        self.gs_ax.set_title("Gauss-Seidel Convergence Plot", color=theme.colors['text_light'])
-        self.gs_ax.set_xlabel("Iteration", color=theme.colors['text_light'])
-        self.gs_ax.set_ylabel("Error (log scale)", color=theme.colors['text_light'])
-        self.gs_ax.grid(True, which="both", ls="--", alpha=0.3)
-        self.gs_ax.tick_params(colors=theme.colors['text_light'])
-        self.gs_canvas.draw()
+        self._clear_gs_plot() # Initialize plot
         
         self.gs_window.protocol("WM_DELETE_WINDOW", self._on_gs_window_close)
+
+    def _clear_gs_results(self):
+        """Clear Gauss-Seidel results"""
+        if self.gs_output_text:
+            self.gs_output_text.delete(1.0, tk.END)
+        self._clear_gs_plot()
+
+    def _clear_gs_plot(self):
+        """Clear Gauss-Seidel plot"""
+        if self.gs_ax:
+            self.gs_ax.clear()
+            self.gs_ax.set_title("Gauss-Seidel Convergence Plot", color=theme.colors['text_light'])
+            self.gs_ax.set_xlabel("Iteration", color=theme.colors['text_light'])
+            self.gs_ax.set_ylabel("Error (log scale)", color=theme.colors['text_light'])
+            self.gs_ax.grid(True, which="both", ls="--", alpha=0.3)
+            self.gs_ax.tick_params(colors=theme.colors['text_light'])
+        if self.gs_canvas:
+            self.gs_canvas.draw()
 
     def _on_gs_window_close(self):
         # Clear references when the window is closed
@@ -682,6 +701,7 @@ class NumericalMethodsGUI:
             self.gs_ax = None
             self.gs_canvas = None
             self.gs_scrollable_frame = None
+            self.gs_toolbar = None
 
     def _parse_gauss_seidel_equations(self, equations_str_list):
         """
