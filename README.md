@@ -62,7 +62,6 @@ pytest tests/
 
 ## 📁 Project Structure
 
-
 numerical_methods_project/
 ├── .vscode/
 ├── data/
@@ -87,7 +86,7 @@ numerical_methods_project/
 │   ├── test_gauss_seidel.py
 │   └── test_newton.py
 ├── README.md
-└── requirements.txt
+└── requirements.txt          # Documentation and user guides
 
 
 ## 🛠 Dependencies
