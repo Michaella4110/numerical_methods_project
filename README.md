@@ -1,49 +1,113 @@
 # Numerical Methods Project
 
-A Python project implementing common numerical methods for solving linear and nonlinear equations, such as Gauss-Seidel, Newton-Raphson, Bisection, and False Position methods. The project also includes utility functions for computation, plotting, and testing results.
+A comprehensive Python application implementing common numerical methods for solving linear and nonlinear equations. Features a modern PySide6 GUI with real-time visualization and professional results display.
 
----
+## 🚀 Features
 
-## Features
+- **Nonlinear Equation Solvers**
+  - Bisection Method
+  - Newton-Raphson Method
+- **Linear System Solver**
+  - Gauss-Seidel Method
+- **Modern GUI**
+  - Professional dark theme interface
+  - Real-time progress tracking
+  - Interactive convergence plots
+  - Structured table results
+- **Advanced Visualization**
+  - Method-specific plot styling
+  - Navigation controls for graphs
+  - Error analysis and convergence rates
 
-- Solve systems of linear equations using iterative methods  
-- Solve nonlinear equations using root-finding methods  
-- Generate convergence plots for analysis  
-- Run automated test scripts to validate implementations  
+## 📦 Installation
 
----
-
-## Installation
-
-1. Clone the repository:
-   ```bash
+1. **Clone the repository**
+  
    git clone https://github.com/Michaella4110/numerical_methods_project.git
-
-2. Navigate to the project folder:
    cd numerical_methods_project
 
-3. Install dependencies:
+2. **Install dependencies**
+
    pip install -r requirements.txt
 
-## Usage
+## 🎯 Usage
 
-  Run the main menu to choose and execute the numerical methods:
+**Run the main application:**
 
-## python src/main_menu.py
+python src/gui.py
 
-  Follow the on-screen menu to input equations, select methods, and see results.
 
-## Running Tests
- 
-  Run the automated tests using:
-  pytest tests/
+### Example Problems
 
-## License
+**Nonlinear Equations:**
+- Function: `x**3 - x - 1`
+- Interval: `[1.0, 2.0]` (Bisection)
+- Initial Guess: `1.0` (Newton)
+- Tolerance: `1e-6`
 
-This project is licensed under the MIT License.
+**Linear Systems:**
 
----
+10x + 2y - z = 27
+-3x - 6y + 2z = -61.5
+x + y + 5z = -21.5
+Initial Guess: [0, 0, 0]
 
-This version is **well-structured, readable, and ready for GitHub**.  
 
-If you want, I can also **add a “Project Structure” diagram and badges** like Python version and license to make it look even more professional. Do you want me to do that?
+## 🧪 Running Tests
+
+Execute the test suite using pytest:
+
+pytest tests/
+
+
+## 📁 Project Structure
+
+
+numerical_methods_project/
+├── .vscode/
+├── data/
+├── docs/
+├── plots/
+├── src/
+│   ├── __pycache__/
+│   ├── solvers/
+│   │   ├── __pycache__/
+│   │   ├── __init__.py
+│   │   ├── bisection.py
+│   │   ├── gauss_seidel.py
+│   │   └── newton.py
+│   ├── __init__.py
+│   ├── gui.py
+│   ├── main_runner.py
+│   ├── matrix_utils.py
+│   ├── theme.py
+│   └── utils.py
+├── tests/
+│   ├── test_bisection.py
+│   ├── test_gauss_seidel.py
+│   └── test_newton.py
+├── README.md
+└── requirements.txt
+
+
+## 🛠 Dependencies
+
+- Python 3.8+
+- PySide6
+- NumPy
+- Matplotlib
+- Pytest (for testing)
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+
+**Built with ❤️ using PySide6, NumPy, and Matplotlib**
+
+This version is:
+- **Professional**: Clean formatting with emojis and clear sections
+- **Complete**: Includes all essential information for users
+- **Ready to copy-paste**: Properly formatted for GitHub
+- **Comprehensive**: Covers installation, usage, examples, and structure
+- **Visually appealing**: Uses markdown formatting for better readability
