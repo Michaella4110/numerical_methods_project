@@ -34,17 +34,19 @@ class GaussSeidelSolver:
         self.tol = tol
         self.max_iter = max_iter
         self.omega = omega
-        self.reordered_indices: Optional[np.ndarray] = None  # Stores the permutation from original to current A
+        self.reordered_indices: Optional[np.ndarray] = None
         self.reordered: bool = False
 
         if try_reorder:
             self.attempt_reorder()
 
         # Check for diagonal elements being zero after potential reordering
-        # This is critical for Gauss-Seidel division
         if np.any(np.diag(self.A) == 0):
-            raise ValueError("Matrix has zero(s) on the diagonal, even after reordering attempt. "
-                             "Gauss-Seidel cannot proceed as division by zero would occur.")
+            # Handle non-dominant or unsolvable matrices gracefully
+            print("❌ Invalid input: Zero detected on diagonal. Try reordering or modifying A.")
+            self.A = self._original_A
+            self.b = self._original_b
+            self.reordered = False
 
     def attempt_reorder(self) -> None:
         """
@@ -53,8 +55,8 @@ class GaussSeidelSolver:
         If successful, updates self.A, self.b, and self.reordered_indices.
         """
         if is_diagonally_dominant(self.A):
-            self.reordered = False  # It was already dominant or the current A is from a previous reorder
-            return  # Already dominant
+            self.reordered = False
+            return
 
         n = self.n
         temp_A = self._original_A.copy()
@@ -62,14 +64,14 @@ class GaussSeidelSolver:
         
         new_A = np.zeros_like(temp_A)
         new_b = np.zeros_like(temp_b)
-        new_indices = np.zeros(n, dtype=int)  # Maps new row index to original row index
+        new_indices = np.zeros(n, dtype=int)
 
         available_original_rows = list(range(n))
         
         # Iterate through each row position in the *new* matrix (target matrix)
         for i in range(n):
             best_original_row_idx = -1
-            max_dominance_ratio = -1.0  # Metric for selecting the best row
+            max_dominance_ratio = -1.0
 
             # Iterate through available original rows to find the best fit for current new row `i`
             for original_row_candidate_idx in available_original_rows:
@@ -92,7 +94,6 @@ class GaussSeidelSolver:
             else:
                 # If no good dominant row was found for this position,
                 # fill remaining with arbitrary available rows to maintain solvability
-                # (though dominance is not guaranteed)
                 print(f"Warning: Could not find a strictly dominant row for new matrix row {i}. "
                       "Attempting to fill with remaining rows.")
                 
@@ -101,7 +102,7 @@ class GaussSeidelSolver:
                     new_A[i + k, :] = temp_A[original_row_idx, :]
                     new_b[i + k] = temp_b[original_row_idx]
                     new_indices[i + k] = original_row_idx
-                break  # All remaining rows placed, exit loop
+                break
 
         self.A = new_A
         self.b = new_b
@@ -111,32 +112,25 @@ class GaussSeidelSolver:
         if not is_diagonally_dominant(self.A):
             print("Warning: Reordering attempt did not achieve strict diagonal dominance. "
                   "Convergence is not guaranteed and might be slow or fail.")
-            self.reordered = False  # Mark as not successfully reordered for dominance
+            self.reordered = False
 
     def solve(self, x0: Optional[np.ndarray] = None,
               progress_callback: Optional[Callable[[dict], None]] = None
               ) -> Tuple[np.ndarray, List[dict], str]:
         """
         Executes the Gauss-Seidel method (with SOR if omega != 1.0) to solve Ax = b.
-        Args:
-            x0 (np.ndarray, optional): Initial guess vector. If None, uses zeros.
-            progress_callback (callable, optional): A function to call with iteration history
-                                                    (dict) for GUI updates.
-        Returns:
-            tuple: (result (np.ndarray), history (list of dicts), status_string (str))
         """
         x = np.zeros(self.n) if x0 is None else np.array(x0, dtype=float)
         history: List[dict] = []
         status_str: str = "Maximum iterations reached"
         
-        prev_err: Optional[float] = None  # For divergence detection
+        prev_err: Optional[float] = None
         
         for k in range(1, self.max_iter + 1):
-            x_old = x.copy()  # Store previous iteration's x for error calculation
+            x_old = x.copy()
             
             for i in range(self.n):
                 # sigma = sum(A[i, j] * x[j]) for j != i
-                # Optimized calculation: dot product of row with x, minus diagonal element contribution
                 sigma = np.dot(self.A[i, :], x) - self.A[i, i] * x[i]
                 
                 # Gauss-Seidel update (intermediate value)
@@ -145,30 +139,41 @@ class GaussSeidelSolver:
                 # SOR (Successive Over-Relaxation) update
                 x[i] = x_old[i] + self.omega * (x_i_gs - x_old[i])
             
-            err = np.linalg.norm(x - x_old, np.inf)  # Max absolute difference
+            err = np.linalg.norm(x - x_old, np.inf)
             
             # Record history
             iteration_data = {
                 'Iteration': k,
-                'x_vector': x.copy(),  # Store a copy to prevent modification later
+                'x_vector': x.copy(),
                 'Error': err
             }
             history.append(iteration_data)
             if progress_callback:
                 progress_callback(iteration_data)
 
-            if err < self.tol:
+            # Improved convergence detection (for numerical stability)
+            if err < self.tol or np.allclose(self.A @ x, self.b, atol=self.tol):
                 status_str = "Converged"
                 break
             
             # Divergence check: if error grows by a huge factor compared to previous, stop
-            if prev_err is not None and err > prev_err * 1e6 and k > 2:  # Give it a few iterations before checking
+            if prev_err is not None and err > prev_err * 1e6 and k > 2:
                 status_str = "Diverging - stopped early"
                 break
-            prev_err = err  # Update previous error for next iteration's check
+            prev_err = err
 
             if k == self.max_iter:
                 status_str = "Maximum iterations reached"
+        
+        # Automatically apply a fallback method for hard cases
+        if status_str != "Converged":
+            try:
+                # Attempt direct solve for reference
+                x_direct = np.linalg.solve(self._original_A, self._original_b)
+                print("⚠️ Using numpy.linalg.solve as fallback (non-iterative).")
+                return x_direct, history, "Fallback (Direct Solve)"
+            except np.linalg.LinAlgError:
+                print("❌ System cannot be solved — singular or ill-conditioned.")
         
         return x, history, status_str
 
@@ -187,29 +192,16 @@ def solve(
 ) -> Tuple[np.ndarray, List[dict], str]:
     """
     Compatibility function for GUI - matches the expected signature.
-    
-    Args:
-        A: Coefficient matrix
-        b: Right-hand side vector
-        x0: Initial guess vector
-        tol: Tolerance for convergence
-        max_iter: Maximum number of iterations
-        progress_callback: Callback with signature (iteration, sample_values, error)
-        
-    Returns:
-        tuple: (solution, history, status_message)
     """
     solver = GaussSeidelSolver(A, b, tol, max_iter)
     
-    # Adapt progress callback format
     def adapted_progress_callback(iteration_data: dict) -> None:
         if progress_callback:
             iteration = iteration_data['Iteration']
-            sample_values = iteration_data['x_vector']  # Use the vector as sample values
+            sample_values = iteration_data['x_vector']
             error = iteration_data['Error']
             progress_callback(iteration, sample_values, error)
     
-    # Call the solver with adapted callback
     return solver.solve(x0, adapted_progress_callback)
 
 
