@@ -2,7 +2,7 @@
 
 A comprehensive Python application implementing common numerical methods for solving linear and nonlinear equations. Features a modern PySide6 GUI with real-time visualization and professional results display.
 
-## 🚀 Features
+## Features
 
 - **Nonlinear Equation Solvers**
   - Bisection Method
@@ -19,7 +19,7 @@ A comprehensive Python application implementing common numerical methods for sol
   - Navigation controls for graphs
   - Error analysis and convergence rates
 
-## 📦 Installation
+## Installation
 
 1. **Clone the repository**
   
@@ -30,7 +30,7 @@ A comprehensive Python application implementing common numerical methods for sol
 
    pip install -r requirements.txt
 
-## 🎯 Usage
+## Usage
 
 **Run the main application:**
 
@@ -60,7 +60,7 @@ Execute the test suite using pytest:
 pytest tests/
 
 
-## 📁 Project Structure
+## Project Structure
 
 numerical_methods_project/
 ├── .vscode/
@@ -89,7 +89,7 @@ numerical_methods_project/
 └── requirements.txt          # Documentation and user guides
 
 
-## 🛠 Dependencies
+## Dependencies
 
 - Python 3.8+
 - PySide6
@@ -97,7 +97,7 @@ numerical_methods_project/
 - Matplotlib
 - Pytest (for testing)
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
