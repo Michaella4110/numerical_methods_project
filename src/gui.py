@@ -1,3 +1,4 @@
+# gui.py (simplified version that works with current imports)
 import sys
 import os
 import re
@@ -14,17 +15,17 @@ from PySide6.QtWidgets import (
     QScrollArea, QGroupBox, QLabel, QLineEdit, QPushButton, 
     QTextEdit, QTabWidget, QGridLayout, QMessageBox, QSizePolicy,
     QSplitter, QFrame, QProgressBar, QTableWidget, QTableWidgetItem,
-    QHeaderView, QAbstractItemView
+    QHeaderView, QAbstractItemView, QCheckBox
 )
-from PySide6.QtCore import Qt, QThread, Signal, QMetaObject, Q_ARG
-from PySide6.QtGui import QFont, QPalette, QColor, QTextCursor, QIcon
+from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtGui import QFont, QPalette, QColor, QTextCursor
 
 # Ensure src directory is in path for imports
 script_dir = os.path.dirname(__file__)
 parent_dir = os.path.dirname(script_dir)
 sys.path.append(parent_dir)
 
-# Import from the same directory
+# Import from the same directory - use only available imports
 from solvers.bisection import solve as bisection_solve
 from solvers.newton import solve as newton_solve
 from solvers.gauss_seidel import solve as gauss_seidel_solve
@@ -78,7 +79,7 @@ class SolverWorker(QThread):
 
 class ModernMatplotlibCanvas(FigureCanvasQTAgg):
     """Modern styled matplotlib canvas with optimized size"""
-    def __init__(self, parent=None, width=10, height=6, dpi=100):  # Optimized size
+    def __init__(self, parent=None, width=10, height=6, dpi=100):
         self.fig, self.ax = plt.subplots(figsize=(width, height), dpi=dpi)
         super().__init__(self.fig)
         self.setParent(parent)
@@ -210,8 +211,8 @@ class ResultsTableWidget(QTableWidget):
 class NumericalMethodsGUI(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Numerical Methods Solver - 2025")
-        self.setMinimumSize(1100, 850)  # Optimized minimum size
+        self.setWindowTitle("Numerical Methods Solver")
+        self.setMinimumSize(1100, 850)
         
         # Apply modern styling
         self.apply_modern_theme()
@@ -384,22 +385,28 @@ class NumericalMethodsGUI(QMainWindow):
         self.b_edit.setStyleSheet(self.get_line_edit_style())
         input_layout.addWidget(self.b_edit, 2, 1)
         
+        # Auto-bracket checkbox (simple version)
+        self.auto_bracket_checkbox = QCheckBox("Enable Auto-Bracket (Manual Search)")
+        self.auto_bracket_checkbox.setChecked(False)
+        self.auto_bracket_checkbox.setStyleSheet("color: #e0e0e0; font-weight: bold;")
+        input_layout.addWidget(self.auto_bracket_checkbox, 3, 0, 1, 2)
+        
         # Initial guess
-        input_layout.addWidget(QLabel("Initial Guess x₀ (Newton):"), 3, 0)
+        input_layout.addWidget(QLabel("Initial Guess x₀ (Newton):"), 4, 0)
         self.x0_edit = QLineEdit(self.x0_val)
         self.x0_edit.setStyleSheet(self.get_line_edit_style())
-        input_layout.addWidget(self.x0_edit, 3, 1)
+        input_layout.addWidget(self.x0_edit, 4, 1)
         
         # Tolerance and iterations
-        input_layout.addWidget(QLabel("Tolerance:"), 4, 0)
+        input_layout.addWidget(QLabel("Tolerance:"), 5, 0)
         self.tol_edit = QLineEdit(self.tolerance)
         self.tol_edit.setStyleSheet(self.get_line_edit_style())
-        input_layout.addWidget(self.tol_edit, 4, 1)
+        input_layout.addWidget(self.tol_edit, 5, 1)
         
-        input_layout.addWidget(QLabel("Max Iterations:"), 5, 0)
+        input_layout.addWidget(QLabel("Max Iterations:"), 6, 0)
         self.iter_edit = QLineEdit(self.max_iter_nonlinear)
         self.iter_edit.setStyleSheet(self.get_line_edit_style())
-        input_layout.addWidget(self.iter_edit, 5, 1)
+        input_layout.addWidget(self.iter_edit, 6, 1)
         
         layout.addWidget(input_group)
         
@@ -423,7 +430,7 @@ class NumericalMethodsGUI(QMainWindow):
         
         layout.addLayout(button_layout)
         
-        # Results and plot splitter - Optimized for better height distribution
+        # Results and plot splitter
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.setStyleSheet("QSplitter::handle { background-color: #555; }")
         
@@ -443,17 +450,16 @@ class NumericalMethodsGUI(QMainWindow):
         self.results_table = ResultsTableWidget()
         results_layout.addWidget(self.results_table)
         
-        # Plot area - Optimized for better vertical space
+        # Plot area
         plot_group = QGroupBox("Convergence Analysis")
         plot_group.setStyleSheet(self.get_groupbox_style())
         plot_layout = QVBoxLayout(plot_group)
         
-        # Create a container for the plot to control its height
         plot_container = QWidget()
         plot_container_layout = QVBoxLayout(plot_container)
         plot_container_layout.setContentsMargins(0, 0, 0, 0)
         
-        self.plot_canvas = ModernMatplotlibCanvas(self, width=10, height=6)  # Optimized height
+        self.plot_canvas = ModernMatplotlibCanvas(self, width=10, height=6)
         self.plot_toolbar = CustomNavigationToolbar(self.plot_canvas, self)
         plot_container_layout.addWidget(self.plot_toolbar)
         plot_container_layout.addWidget(self.plot_canvas)
@@ -462,7 +468,7 @@ class NumericalMethodsGUI(QMainWindow):
         
         splitter.addWidget(results_group)
         splitter.addWidget(plot_group)
-        splitter.setSizes([450, 650])  # Balanced distribution
+        splitter.setSizes([450, 650])
         
         layout.addWidget(splitter, 1)
         
@@ -518,7 +524,7 @@ class NumericalMethodsGUI(QMainWindow):
         self.gs_btn.clicked.connect(self.run_gauss_seidel)
         layout.addWidget(self.gs_btn)
         
-        # Results and plot splitter - Optimized for better height distribution
+        # Results and plot splitter
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.setStyleSheet("QSplitter::handle { background-color: #555; }")
         
@@ -538,17 +544,16 @@ class NumericalMethodsGUI(QMainWindow):
         self.gs_results_table = ResultsTableWidget()
         gs_results_layout.addWidget(self.gs_results_table)
         
-        # Plot area - Optimized for better vertical space
+        # Plot area
         gs_plot_group = QGroupBox("Convergence Analysis")
         gs_plot_group.setStyleSheet(self.get_groupbox_style())
         gs_plot_layout = QVBoxLayout(gs_plot_group)
         
-        # Create a container for the plot to control its height
         gs_plot_container = QWidget()
         gs_plot_container_layout = QVBoxLayout(gs_plot_container)
         gs_plot_container_layout.setContentsMargins(0, 0, 0, 0)
         
-        self.gs_plot_canvas = ModernMatplotlibCanvas(self, width=10, height=6)  # Optimized height
+        self.gs_plot_canvas = ModernMatplotlibCanvas(self, width=10, height=6)
         self.gs_plot_toolbar = CustomNavigationToolbar(self.gs_plot_canvas, self)
         gs_plot_container_layout.addWidget(self.gs_plot_toolbar)
         gs_plot_container_layout.addWidget(self.gs_plot_canvas)
@@ -557,7 +562,7 @@ class NumericalMethodsGUI(QMainWindow):
         
         splitter.addWidget(gs_results_group)
         splitter.addWidget(gs_plot_group)
-        splitter.setSizes([450, 650])  # Balanced distribution
+        splitter.setSizes([450, 650])
         
         layout.addWidget(splitter, 1)
         
@@ -649,7 +654,7 @@ class NumericalMethodsGUI(QMainWindow):
         return color
 
     def run_bisection(self):
-        """Run bisection method"""
+        """Run bisection method with basic auto-bracket suggestion"""
         try:
             func_str = self.function_edit.text()
             a = float(self.a_edit.text())
@@ -667,9 +672,20 @@ class NumericalMethodsGUI(QMainWindow):
             func = parse_function(func_str)
             
             if not validate_bisection(func, a, b):
-                QMessageBox.critical(self, "Bisection Error", 
-                                   f"f({a}) and f({b}) have same sign. Requires opposite signs.")
-                return
+                reply = QMessageBox.question(self, "Invalid Bracket", 
+                                           f"f({a}) and f({b}) have same sign. Would you like to try a wider search range?",
+                                           QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+                if reply == QMessageBox.StandardButton.Yes:
+                    # Suggest wider range
+                    wider_a = a - 5
+                    wider_b = b + 5
+                    self.a_edit.setText(str(wider_a))
+                    self.b_edit.setText(str(wider_b))
+                    QMessageBox.information(self, "Range Updated", 
+                                          f"Search range updated to [{wider_a}, {wider_b}]. Click Solve again.")
+                    return
+                else:
+                    return
 
             self.start_solver_thread(bisection_solve, (func, a, b, tol, max_iter), "Bisection")
 
@@ -796,7 +812,7 @@ class NumericalMethodsGUI(QMainWindow):
         """Stop current solver"""
         if self.current_solver_thread and self.current_solver_thread.isRunning():
             self.current_solver_thread.stop()
-            self.current_solver_thread.wait(1000)  # Wait up to 1 second
+            self.current_solver_thread.wait(1000)
             self.progress_bar.setVisible(False)
             self.set_solver_buttons_enabled(True)
             QMessageBox.information(self, "Solver Stopped", "Solver has been stopped.")
@@ -808,11 +824,10 @@ class NumericalMethodsGUI(QMainWindow):
         self.bisection_btn.setEnabled(enabled)
         self.newton_btn.setEnabled(enabled)
         self.gs_btn.setEnabled(enabled)
-        self.stop_btn.setEnabled(not enabled)  # Stop button enabled when solver running
+        self.stop_btn.setEnabled(not enabled)
 
     def display_results(self, solution, history, status):
         """Display solver results in structured format"""
-        # Update summary
         self.results_summary.clear()
         self.results_summary.append(f"<h3>{self.current_solver_thread.solver_name} Results</h3>")
         self.results_summary.append(f"<b>Status:</b> {status}<br>")
@@ -846,7 +861,6 @@ class NumericalMethodsGUI(QMainWindow):
 
     def display_gs_results(self, solution, history, status):
         """Display Gauss-Seidel results in structured format"""
-        # Update summary
         self.gs_results_summary.clear()
         self.gs_results_summary.append("<h3>Gauss-Seidel Results</h3>")
         self.gs_results_summary.append(f"<b>Status:</b> {status}<br>")
@@ -872,7 +886,6 @@ class NumericalMethodsGUI(QMainWindow):
                 for header in headers:
                     value = entry.get(header, '')
                     if isinstance(value, np.ndarray):
-                        # Format vector values
                         formatted = '[' + ', '.join(f"{v:.4f}" for v in value[:3])
                         if len(value) > 3:
                             formatted += ', ...'
@@ -905,18 +918,17 @@ class NumericalMethodsGUI(QMainWindow):
                     # Choose color based on method
                     if "Bisection" in title:
                         color = "#2196F3"
-                        marker = 's'  # square
+                        marker = 's'
                         linestyle = '-'
                     elif "Newton" in title:
                         color = "#FF9800"
-                        marker = '^'  # triangle
+                        marker = '^'
                         linestyle = '--'
                     else:
                         color = "#9C27B0"
-                        marker = 'o'  # circle
+                        marker = 'o'
                         linestyle = '-.'
                     
-                    # Optimized plot styling
                     canvas.ax.plot(filtered_iter, filtered_errors, marker=marker, linestyle=linestyle, 
                                  color=color, markersize=6, linewidth=2.5, alpha=0.9,
                                  markerfacecolor=color, markeredgecolor='white', markeredgewidth=1.2)
@@ -926,10 +938,8 @@ class NumericalMethodsGUI(QMainWindow):
                     canvas.ax.set_xlabel("Iteration", color='#e0e0e0', labelpad=12, fontsize=12)
                     canvas.ax.set_ylabel("Error (log scale)", color='#e0e0e0', labelpad=12, fontsize=12)
                     
-                    # Enhanced grid
                     canvas.ax.grid(True, alpha=0.3, color='#e0e0e0', linestyle='--', linewidth=0.8)
                     
-                    # Add statistics
                     if len(filtered_errors) > 1:
                         convergence_rate = filtered_errors[-1] / filtered_errors[-2] if filtered_errors[-2] != 0 else 0
                         stats_text = f'Final Error: {filtered_errors[-1]:.2e}\nIterations: {len(iterations)}'
