@@ -1,42 +1,42 @@
 # Numerical Methods Solver - Project Description
 
-## 📊 Project Overview
+## Project Overview
 
 The **Numerical Methods Solver** is a modern, professional desktop application built with PySide6 that provides an intuitive interface for solving mathematical problems using various numerical methods. This application combines the power of Python's scientific computing libraries with a sleek, user-friendly GUI to make numerical analysis accessible and efficient.
 
-## 🎯 Key Features
+## Key Features
 
-### 🔍 Nonlinear Equation Solvers
+### Nonlinear Equation Solvers
 - **Bisection Method**: Root-finding algorithm for continuous functions
 - **Newton-Raphson Method**: Fast-converging root-finding using derivatives
 - **Real-time Progress Tracking**: Live iteration updates during computation
 - **Convergence Analysis**: Visual representation of method performance
 
-### 📈 Linear System Solver
+### Linear System Solver
 - **Gauss-Seidel Method**: Iterative solver for linear systems (Ax = b)
 - **Matrix Parsing**: Automatic conversion of equations to matrix form
 - **Diagonal Dominance Check**: Automatic validation for convergence conditions
 - **Multi-variable Support**: Handles systems with multiple variables
 
-### 🎨 Modern User Interface
+### Modern User Interface
 - **Dark Theme**: Professional dark color scheme with blue accents
 - **Tabbed Interface**: Organized workflow with separate tabs for different solver types
 - **Responsive Design**: Scrollable interface with optimized layouts
 - **Professional Styling**: Custom CSS styling for all UI components
 
-### 📊 Advanced Visualization
+### Advanced Visualization
 - **Interactive Plots**: Large, detailed convergence graphs with navigation controls
 - **Method-Specific Colors**: Distinct visual styles for each numerical method
 - **Real-time Updates**: Live plotting during computation
 - **Export Capabilities**: Save plots in multiple formats
 
-### 💾 Data Management
+### Data Management
 - **Structured Results**: Professional table displays with sorting capabilities
 - **Iteration History**: Complete record of all computation steps
 - **Error Tracking**: Comprehensive error analysis and convergence rates
 - **Export Ready**: Copy-paste friendly results formatting
 
-## 🛠 Technical Architecture
+## Technical Architecture
 
 ### Frontend
 - **PySide6**: Modern Qt6-based GUI framework
@@ -62,7 +62,7 @@ The **Numerical Methods Solver** is a modern, professional desktop application b
 └─────────────────┘    └──────────────────┘    └─────────────────┘
 ```
 
-## 📈 Supported Methods
+## Supported Methods
 
 ### 1. Bisection Method
 - **Purpose**: Finding roots of continuous functions
@@ -82,7 +82,7 @@ The **Numerical Methods Solver** is a modern, professional desktop application b
 - **Convergence**: Iterative refinement
 - **Best For**: Large sparse systems
 
-## 🚀 Installation & Setup
+## Installation & Setup
 
 ### Prerequisites
 - Python 3.8+
@@ -124,7 +124,7 @@ numerical_methods_project/
 └── requirements.txt          # Documentation and user guides
 
 
-## 💡 Usage Examples
+## Usage Examples
 
 ### Nonlinear Equations
 ```python
@@ -144,7 +144,7 @@ x + y + 5z = -21.5
 Initial Guess: [0, 0, 0]
 ```
 
-## 🎨 UI/UX Features
+## UI/UX Features
 
 ### Input Validation
 - Real-time equation syntax checking
@@ -164,7 +164,7 @@ Initial Guess: [0, 0, 0]
 - Responsive layout for different screen sizes
 - Clear visual hierarchy
 
-## 🔬 Educational Value
+## Educational Value
 
 This project serves as an excellent educational tool for:
 - **Mathematics Students**: Understanding numerical methods in practice
@@ -172,14 +172,14 @@ This project serves as an excellent educational tool for:
 - **Researchers**: Quick prototyping and analysis of numerical algorithms
 - **Educators**: Demonstrating numerical methods in classroom settings
 
-## 📈 Performance Metrics
+## Performance Metrics
 
 - **Computation Speed**: Optimized algorithms with O(n) to O(n²) complexity
 - **Memory Usage**: Efficient data structures for large iteration histories
 - **Accuracy**: Double precision floating-point arithmetic
 - **Scalability**: Handles systems with up to 100+ variables
 
-## 🔮 Future Enhancements
+## Future Enhancements
 
 ### Planned Features
 - [ ] Additional numerical methods (Secant, Fixed Point, etc.)
@@ -196,7 +196,7 @@ This project serves as an excellent educational tool for:
 - [ ] Multi-language support
 - [ ] Mobile-responsive web version
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions in the following areas:
 - New numerical method implementations
@@ -205,11 +205,11 @@ We welcome contributions in the following areas:
 - Documentation enhancements
 - Bug reports and feature requests
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🏆 Acknowledgments
+## Acknowledgments
 
 - **PySide6 Team**: For the excellent Qt6 Python bindings
 - **NumPy & Matplotlib Communities**: For robust scientific computing tools
@@ -223,3 +223,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 **Last Updated**: 2025  
 
 *Built with ❤️ using PySide6, NumPy, and Matplotlib*
+
